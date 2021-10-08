@@ -8,6 +8,12 @@
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <!-- END OPTIONAL PERMISSIONS -->
+
+  <!-- ToneFramework Permissions -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  
   <application
     android:name=".MainApplication"
     android:label="@string/app_name"
@@ -33,5 +39,25 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity"/>
+    <service
+        android:name="com.strutbebetter.tonelisten.core.ToneServiceManager"
+        android:enabled="true"
+        android:exported="true"
+        android:usesCleartextTraffic="true"
+        android:foregroundServiceType="location|microphone"
+        android:process=":ToneListeningService">
+    </service>
+    <receiver android:name="com.strutbebetter.tonelisten.core.ToneBroadcastReceiver"
+        android:exported="true">
+      <intent-filter>
+        <action android:name="com.strutbebetter.tonelisten.broadcast.TONERESPONSE"/>
+      </intent-filter>
+    </receiver>
   </application>
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <data android:scheme="https"/>
+    </intent>
+  </queries>
 </manifest>
