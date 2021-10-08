@@ -7,8 +7,8 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as React from 'react';
-import { ColorSchemeName, Pressable } from 'react-native';
+import React, {useEffect} from 'react';
+import { ColorSchemeName, DeviceEventEmitter, Linking, Pressable, ImageBackground, View, Button } from 'react-native';
 
 import Colors from '../constants/Colors';
 import useColorScheme from '../hooks/useColorScheme';
@@ -42,6 +42,7 @@ function RootNavigator() {
       <Stack.Screen name="NotFound" component={NotFoundScreen} options={{ title: 'Oops!' }} />
       <Stack.Group screenOptions={{ presentation: 'modal' }}>
         <Stack.Screen name="Modal" component={ModalScreen} />
+        <Stack.Screen name="MyModal" component={ModalToneScreen} />
       </Stack.Group>
     </Stack.Navigator>
   );
@@ -53,8 +54,79 @@ function RootNavigator() {
  */
 const BottomTab = createBottomTabNavigator<RootTabParamList>();
 
-function BottomTabNavigator() {
+function BottomTabNavigator({navigation} : any) {
   const colorScheme = useColorScheme();
+  
+  useEffect(() => {
+    console.log("register the listener from the app")
+    
+    DeviceEventEmitter.addListener("ToneResponse", 
+    async (event)=>{
+      console.log("Event Detected")
+      console.log(event)
+      try {
+        switch (event.actionType) {
+          case 'image':{
+            navigation.navigate("MyModal", {
+              actionUrl: event.actionUrl
+            })
+            break;
+          }
+          case 'webpage': {
+            const supported = await Linking.canOpenURL(event.actionUrl);
+            console.log(supported)
+            if(supported){
+                await Linking.openURL(event.actionUrl)
+               } else {
+                alert("This url can't be open")
+              }
+            break;
+          } 
+          case 'sms': {
+            try {
+              const bodyMessage= "Use this cupon for 10% off in your next visit";
+              console.log(event.actionUrl);
+              const url = `sms:${event.actionUrl}?body=${bodyMessage}`
+              await Linking.openURL(url);
+            } catch (error) {
+              alert("This url can't be open")
+            }
+            break;
+          } 
+          case 'tel': {
+            try {
+              const url = `tel:${event.actionUrl}`
+              await Linking.openURL(url);
+            } catch (error) {
+              alert("This url can't be open")
+            }
+            break;
+          } 
+          case 'mail': {
+            try {
+              const bodyMessage= "Use this cupon for 10% off in your next visit";
+              const subject = "CUPON CUPON CUPON"
+              const url = `mailto:${event.actionUrl}?subject=${subject}&body=${bodyMessage}`
+              console.log(url);
+              await Linking.openURL(url);
+            } catch (error) {
+              alert("This url can't be open")
+            }
+            break;
+          } 
+          default:
+            break;
+        }
+      } catch (error) {
+        alert("Error handle the data");
+      }
+    })
+    return () => {
+      DeviceEventEmitter.removeListener("ToneResponse", (event)=>{
+        console.log("Remove listener");
+      });
+    }
+  }, [])
 
   return (
     <BottomTab.Navigator
@@ -104,4 +176,29 @@ function TabBarIcon(props: {
   color: string;
 }) {
   return <FontAwesome size={30} style={{ marginBottom: -3 }} {...props} />;
+}
+
+function ModalToneScreen(props : any) {
+
+  const { route, navigation } = props;
+  const {actionUrl} = route.params;
+  console.log(actionUrl)
+
+  return (
+    <View style={{ flex: 1}}>
+      <ImageBackground
+        resizeMode="cover"
+        style = {{
+          flex: 1,
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}
+        source = {{
+          uri: actionUrl
+        }}
+        >
+        <Button onPress={() => navigation.goBack()} title="X" />
+      </ImageBackground> 
+    </View>
+  );
 }

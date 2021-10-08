@@ -170,6 +170,7 @@ In the onCreate method add the follow code to intantiate the framework
 @Override
   protected void onCreate(Bundle savedInstanceState) {
     ...
+    
     //Here we are going to obtain the reactContext of the application
     ReactInstanceManager reactInstanceManager = getReactNativeHost().getReactInstanceManager();
     ReactApplicationContext reactApplicationContext = (ReactApplicationContext) reactInstanceManager.getCurrentReactContext();
@@ -177,25 +178,32 @@ In the onCreate method add the follow code to intantiate the framework
       @Override
       public void onReactContextInitialized(ReactContext context) {
         reactContext = context;
+        boolean checkReactContext = (reactContext == null);
+        Log.d("InitFramework", String.valueOf(checkReactContext));
+        //This piece of code handle the activity from the notification
         Intent intent = getIntent();
-        //This piece of code handle the activity from the notifications
-       if(intent != null){
-       if(intent.getAction().toString().equals(AppConstants.TONE_DETECTED_ACTION)){
-           ToneModel toneModel = new ToneModel(intent.getStringExtra("actionType"),intent.getStringExtra("actionUrl"),  "Tone Body");
-           WritableMap toneData = new WritableNativeMap();
-           toneData.putString("actionType", toneModel.getActionType());
-           toneData.putString("actionUrl", toneModel.getActionUrl());
-           toneData.putString("body", toneModel.getBody());
-           context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-               .emit("ToneResponse", toneData);
-         }
-       }
+        if(intent != null) {
+          if (intent.getAction() != null) {
+            if (intent.getAction().toString().equals(AppConstants.TONE_DETECTED_ACTION)) {
+              ToneModel toneModel = new ToneModel(intent.getStringExtra("actionType"), intent.getStringExtra("actionUrl"), "Tone Body");
+              WritableMap toneData = new WritableNativeMap();
+              toneData.putString("actionType", toneModel.getActionType());
+              toneData.putString("actionUrl", toneModel.getActionUrl());
+              toneData.putString("body", toneModel.getBody());
+              if (reactContext != null) {
+                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                    .emit("ToneResponse", toneData);
+              }
+            }
+          }
+        }
       }
     });
 
     //Here the service begin
     mActivity = MainActivity.this;
     //By the moment the apiKey: would be a debug one, later you'll need to provide your own key.
+    Log.d("Init Framework", "Tone Framework can start");
     toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
     toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
     ...
@@ -204,7 +212,7 @@ In the onCreate method add the follow code to intantiate the framework
 
 We just need to implements 2 more Overrides one for handle checkPermissions and the other to create the Bridge and send the response to the frontPage
 ```
-      //This override start the service after permissions request
+  //This override start the service after permissions request
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -226,17 +234,60 @@ We just need to implements 2 more Overrides one for handle checkPermissions and 
     toneData.putString("actionType", toneModel.getActionType());
     toneData.putString("actionUrl", toneModel.getActionUrl());
     toneData.putString("body", toneModel.getBody());
+    boolean checkReactContext = (reactContext == null);
+    Log.d("InitFramework", "verify React Context");
+    Log.d("InitFramework", String.valueOf(checkReactContext));
     if(reactContext != null){
+      //Here is where the bridge is implemented
       reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
           .emit("ToneResponse", toneData);
     }
   }
 ```
-## Used By
 
-This project is used by the following companies:
 
-- Company 1
-- Company 2
+ ## Receiving the Data 
+ Once the native side is ready just need to create a listener to receive the data and handling it properly. Here is an example.
 
-  
+#### Using the useEffect Hook
+
+By using the useEffect hook the app can suscribe to the framework like this
+1) Import DeviceEventEmitter
+```
+import {DeviceEventEmitter} from 'react-native';
+```
+2) Declare the listener 
+
+```
+useEffect(()=>{
+  DeviceEventEmitter.addListener(
+    "ToneReponse",
+    async (event)=>{
+      ...
+      // Handle response
+      ...
+    }
+  )
+})
+```
+The identifier of the listener is the same define in the MainActivity.jv when the bridge is implemented
+right here 
+```
+...
+reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+          .emit("ToneResponse", toneData);
+...
+```
+
+The event receive in this listener is a JSON with the following structure:
+
+```
+{
+  "actionType": "image"
+  "actionUrl": "https://www.tonedemo.com/TONE/TONEReceived.png"
+  "body": "body"
+}
+```
+
+You can handle it the way you want it.
+In this repository you can see an example of it 
