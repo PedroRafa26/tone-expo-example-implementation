@@ -34,51 +34,35 @@ public class MainActivity extends ReactActivity implements ToneUIEventListener {
   private ReactContext reactContext;
 
   @Override
+  protected void onResume() {
+    super.onResume();
+    getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
+      reactContext = context;
+      Intent intent = getIntent();
+      ToneImplementation.handleIntent(intent, context);
+      mActivity = MainActivity.this;
+      //By the moment the apiKey would be a debug one, later you'll need to provide your own key.
+      toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
+      toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
+    });
+  }
+
+  @Override
   protected void onCreate(Bundle savedInstanceState) {
-    // Set the theme to AppTheme BEFORE onCreate to support 
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null);
-    // SplashScreen.show(...) has to be called after super.onCreate(...)
-    // Below line is handled by '@expo/configure-splash-screen' command and it's discouraged to modify it manually
     SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class, false);
 
     //Here we are going to obtain the reactContext of the application
-    ReactInstanceManager reactInstanceManager = getReactNativeHost().getReactInstanceManager();
-    ReactApplicationContext reactApplicationContext = (ReactApplicationContext) reactInstanceManager.getCurrentReactContext();
-    reactInstanceManager.addReactInstanceEventListener(new ReactInstanceManager.ReactInstanceEventListener() {
-      @Override
-      public void onReactContextInitialized(ReactContext context) {
-        reactContext = context;
-        boolean checkReactContext = (reactContext == null);
-        Log.d("InitFramework", String.valueOf(checkReactContext));
-        //This piece of code handle the activity from the notification
-        Intent intent = getIntent();
-        if(intent != null) {
-          if (intent.getAction() != null) {
-            if (intent.getAction().toString().equals(AppConstants.TONE_DETECTED_ACTION)) {
-              ToneModel toneModel = new ToneModel(intent.getStringExtra("actionType"), intent.getStringExtra("actionUrl"), "Tone Body");
-              WritableMap toneData = new WritableNativeMap();
-              toneData.putString("actionType", toneModel.getActionType());
-              toneData.putString("actionUrl", toneModel.getActionUrl());
-              toneData.putString("body", toneModel.getBody());
-              if (reactContext != null) {
-                reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("ToneResponse", toneData);
-              }
-            }
-          }
-        }
-      }
-    });
-
-    //Here the service begin
-    mActivity = MainActivity.this;
-    //By the moment the apiKey: would be a debug one, later you'll need to provide your own key.
-    Log.d("Init Framework", "Tone Framework can start");
-    toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
-    toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
+//    getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
+//      reactContext = context;
+//      Intent intent = getIntent();
+//      ToneImplementation.handleIntent(intent, context);
+//      mActivity = MainActivity.this;
+//      //By the moment the apiKey would be a debug one, later you'll need to provide your own key.
+      toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
+      toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
+//    });
   }
 
 
@@ -101,6 +85,8 @@ public class MainActivity extends ReactActivity implements ToneUIEventListener {
         };
     }
 
+
+
     //This override start the service after permissions request
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -119,16 +105,6 @@ public class MainActivity extends ReactActivity implements ToneUIEventListener {
   //This override handle the response from the service with the app open
   @Override
   public void onToneReceived(ToneModel toneModel) {
-    WritableMap toneData = new WritableNativeMap();
-    toneData.putString("actionType", toneModel.getActionType());
-    toneData.putString("actionUrl", toneModel.getActionUrl());
-    toneData.putString("body", toneModel.getBody());
-    boolean checkReactContext = (reactContext == null);
-    Log.d("InitFramework", "verify React Context");
-    Log.d("InitFramework", String.valueOf(checkReactContext));
-    if(reactContext != null){
-      reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-          .emit("ToneResponse", toneData);
-    }
+    ToneImplementation.responseData(toneModel, reactContext);
   }
 }
