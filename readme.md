@@ -19,7 +19,7 @@ Once the backup commit is done. Procced to run the following commands in the roo
 To run the project you can follow the steps from the  
 [React Native CLI Quickstart](https://reactnative.dev/docs/environment-setup) from the documentation
 
-####WARNING
+####WARNING <br>
 After migration it'll probably shows an error referent to  _**requireNativeComponent: "RNCSafeAreaProvider"**_ to fix this you can follow [this instructions](https://github.com/react-navigation/react-navigation/issues/8964#issuecomment-754122115)
  
  ## Implementing native side
@@ -30,7 +30,7 @@ After migration it'll probably shows an error referent to  _**requireNativeCompo
 1)  In project-name/build.gradle upgrade the minSdkVersion to 22
 
 ``` java 
-//The SDK works with that minSdkVersion
+//The SDK works with this minSdkVersion
 minSdkVersion = 22
 
 ```
@@ -53,8 +53,6 @@ dependencies {
     ...
     //framework
     implementation 'com.github.The-TONE-Knows-Inc:framework-core-tone-android:1.8'
-
-    //dependencies implemented on the framework
     ...
     implementation "com.facebook.react:react-native:+"  // From node_modules
 }
@@ -99,7 +97,8 @@ Inside **application** tag add the service and the receiver
     </receiver>
 </application>
 ```
-and under application tag inside **manifest** tag add the query tag to Linking support
+*Optional if you use [Linking](https://reactnative.dev/docs/linking)*
+and under **application** inside **manifest** tag add the **query** tag to [Linking](https://reactnative.dev/docs/linking) support  
 
 ``` xml
 <manifest>
@@ -131,7 +130,7 @@ import com.strutbebetter.tonelisten.models.ToneModel;
 import com.strutbebetter.tonelisten.rn.RNToneImplementation;
 ```
 
-implements ToneUIEventListener on MainActivity and declarate add the next variables
+implements ToneUIEventListener on MainActivity and declarate the next variables
 
 ``` java
     public class MainActivity extends ReactActivity implements ToneUIEventListener {
@@ -205,7 +204,7 @@ import {DeviceEventEmitter} from 'react-native';
 useEffect(()=>{
   DeviceEventEmitter.addListener(
     "ToneReponse",
-    async (event)=>{
+    (event)=>{
       ...
       // Handle response
       switch(){
@@ -239,7 +238,7 @@ useEffect(()=>{
   )
 })
 ```
- [Linking from React Native](https://reactnative.dev/docs/linking) it's a good option to handle most events. Look for index from Navigation folder to take 
+ [Linking from React Native](https://reactnative.dev/docs/linking) it's a good option to handle most events. Look for [`navigation/index.tsx`](https://github.com/PedroRafa26/tone-expo-example-implementation/blob/master/navigation/index.tsx) as an example
 
 
 The event receive in this listener is a JSON with the following structure:
