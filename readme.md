@@ -27,22 +27,22 @@ After migration it'll probably shows an error referent to  _**requireNativeCompo
  - #### Add the framework as a dependency
  
 
-1) Create a folder /libs into project-name/android and put the .aar file in there
-#### project-name/android/libs
-2) In project-name/build.gradle add the follow code
+1)  In project-name/build.gradle upgrade the minSdkVersion to 22
+
 ``` java 
-...
 //The SDK works with that minSdkVersion
 minSdkVersion = 22
-...
+
+```
+And add the following code inside **repositories**
+```
 ...
 allprojects {
     ...
     repositories {
         mavenLocal()
-        flatDir{
-            dirs "$rootDir/libs"
-        }
+        maven { url 'https://jitpack.io' }
+    }
     ...
 }
 ```
@@ -52,24 +52,9 @@ allprojects {
 dependencies {
     ...
     //framework
-    implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation(name:'tonelisten-release', ext:'aar')
+    implementation 'com.github.The-TONE-Knows-Inc:framework-core-tone-android:1.8'
 
     //dependencies implemented on the framework
-    def room_version = "2.3.0"
-    implementation 'com.google.android.gms:play-services-location:18.0.0'
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'com.google.android.material:material:1.4.0'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    implementation("com.google.guava:guava:30.1.1-android")
-    implementation("com.squareup.okhttp3:okhttp:4.9.0")
-    implementation 'com.google.code.gson:gson:2.8.8'
-    implementation "androidx.room:room-runtime:$room_version"
-    implementation "androidx.room:room-guava:$room_version"
-    annotationProcessor "androidx.room:room-compiler:$room_version"
-    testImplementation "androidx.room:room-testing:$room_version"
     ...
     implementation "com.facebook.react:react-native:+"  // From node_modules
 }
@@ -114,7 +99,7 @@ Inside **application** tag add the service and the receiver
     </receiver>
 </application>
 ```
-and under application tag inside **manifest** tag add this lines to Linking support
+and under application tag inside **manifest** tag add the query tag to Linking support
 
 ``` xml
 <manifest>
@@ -129,39 +114,6 @@ and under application tag inside **manifest** tag add this lines to Linking supp
   </queries>
 </manifest>
 ```
-2) Create a new class "ToneImplementation" in your android project
-
-![ToneImplementation1](https://firebasestorage.googleapis.com/v0/b/macundales-pedidos.appspot.com/o/imagen_2021-10-11_101026.png?alt=media&token=06b5314b-ee30-4434-ac2d-d28c0c0aa13a)
-
-Inside the class copy the following methods:
-
-```java
-public class ToneImplementation {
-
-  public static void handleIntent(Intent intent, ReactContext reactContext){function");
-    if(intent != null) {
-      if (intent.getAction() != null) {
-        if (intent.getAction().toString().equals(AppConstants.TONE_DETECTED_ACTION)) {
-          ToneModel toneModel = new ToneModel(intent.getStringExtra("actionType"), intent.getStringExtra("actionUrl"), "Tone Body");
-          responseData(toneModel, reactContext);
-        }
-      }
-    }
-  }
-
-  public static void responseData(ToneModel toneModel, ReactContext reactContext){
-    WritableMap toneData = new WritableNativeMap();
-    toneData.putString("actionType", toneModel.getActionType());
-    toneData.putString("actionUrl", toneModel.getActionUrl());
-    toneData.putString("body", toneModel.getBody());
-    if(reactContext != null){
-      reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-          .emit("ToneResponse", toneData);
-    }
-  }
-}
-
-```
 
 3) Edit android\app\src\main\java\com\project-name\MainActivity.java
 
@@ -171,38 +123,28 @@ Add the following imports in the top of the field
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import android.widget.Toast;
-import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.strutbebetter.tonelisten.ToneFramework;
-import com.strutbebetter.tonelisten.common.AppConstants;
 import com.strutbebetter.tonelisten.core.ToneUIEventListener;
 import com.strutbebetter.tonelisten.models.ToneModel;
+import com.strutbebetter.tonelisten.rn.RNToneImplementation;
 ```
 
-implements ToneUIEventListener on MainActivity
+implements ToneUIEventListener on MainActivity and declarate add the next variables
 
 ``` java
     public class MainActivity extends ReactActivity implements ToneUIEventListener {
-        ...
+      ToneFramework toneFramework;
+      private final int TONE_PERMISSION_CODE = 302;
+      private Activity mActivity;
+      private ReactContext reactContext;
+      ...
     }
 ```
 
-Define the following variables
+Inside the Override onCreate method add the follow code to intantiate the framework
 
-``` java
-  ToneFramework toneFramework;
-  private final int TONE_PERMISSION_CODE = 302;
-  private Activity mActivity;
-  private ReactContext reactContext;
-```
-
-In the onCreate method add the follow code to intantiate the framework
 ``` java
 @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -257,7 +199,7 @@ By using the useEffect hook the app can suscribe to the framework like this
 ``` js
 import {DeviceEventEmitter} from 'react-native';
 ```
-2) Declare the listener 
+2) Declare the listener and handle the event with a Switch Case 
 
 ``` js
 useEffect(()=>{
@@ -266,22 +208,50 @@ useEffect(()=>{
     async (event)=>{
       ...
       // Handle response
+      switch(){
+        switch (event.actionType) {
+          case 'image':{
+            //Show Image
+            break;
+          }
+          case 'webpage': {
+            //Launch Webpage
+            break;
+          } 
+          case 'sms': {
+            //Open Message
+            break;
+          } 
+          case 'tel': {
+            //Prepare phone call
+            break;
+          } 
+          case 'mail': {
+            //Send email
+            break;
+          } 
+          default:
+            break;
+        }
+      }
       ...
     }
   )
 })
 ```
-The identifier of the listener is the same define in the MainActivity.jv when the bridge is implemented
-right here 
-``` java
-...
-reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-          .emit("ToneResponse", toneData);
-...
-```
+ [Linking from React Native](https://reactnative.dev/docs/linking) it's a good option to handle most events. Look for index from Navigation folder to take 
+
 
 The event receive in this listener is a JSON with the following structure:
 
+
+| Key | Type     | Description                |
+| :-------- | :------- | :------------------------- |
+| `actionType` | `string` | actions availables are: `image` - `mail` - `sms` - `tel` - `webpage` |
+| `actionUrl` | `string` | for `image` and `webpage` returns an url. <br/> for `sms` and `tel` returns a cellphone number<br/>and  `mail` returns an email address.|
+| `body` | `string` | It's a complement of the response.|
+
+Example:
 ```json
 {
   "actionType": "image",
@@ -289,6 +259,3 @@ The event receive in this listener is a JSON with the following structure:
   "body": "body"
 }
 ```
-
-You can handle it the way you want it.
-In this repository you can see an example of it 

@@ -3,23 +3,17 @@ package com.toneexpoexampleimplementation;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import android.widget.Toast;
 import android.os.Bundle;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
-import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeMap;
-import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.strutbebetter.tonelisten.ToneFramework;
-import com.strutbebetter.tonelisten.common.AppConstants;
 import com.strutbebetter.tonelisten.core.ToneUIEventListener;
 import com.strutbebetter.tonelisten.models.ToneModel;
+import com.strutbebetter.tonelisten.rn.RNToneImplementation;
 import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView;
 
 import expo.modules.splashscreen.singletons.SplashScreen;
@@ -34,35 +28,21 @@ public class MainActivity extends ReactActivity implements ToneUIEventListener {
   private ReactContext reactContext;
 
   @Override
-  protected void onResume() {
-    super.onResume();
-    getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
-      reactContext = context;
-      Intent intent = getIntent();
-      ToneImplementation.handleIntent(intent, context);
-      mActivity = MainActivity.this;
-      //By the moment the apiKey would be a debug one, later you'll need to provide your own key.
-      toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
-      toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
-    });
-  }
-
-  @Override
   protected void onCreate(Bundle savedInstanceState) {
     setTheme(R.style.AppTheme);
     super.onCreate(null);
     SplashScreen.show(this, SplashScreenImageResizeMode.CONTAIN, ReactRootView.class, false);
 
     //Here we are going to obtain the reactContext of the application
-//    getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
-//      reactContext = context;
-//      Intent intent = getIntent();
-//      ToneImplementation.handleIntent(intent, context);
-//      mActivity = MainActivity.this;
-//      //By the moment the apiKey would be a debug one, later you'll need to provide your own key.
+    getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
+      reactContext = context;
+      Intent intent = getIntent();
+      RNToneImplementation.handleIntent(intent, context);
+      mActivity = MainActivity.this;
+      //By the moment the apiKey would be a debug one, later you'll need to provide your own key.
       toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
       toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
-//    });
+    });
   }
 
 
@@ -105,6 +85,6 @@ public class MainActivity extends ReactActivity implements ToneUIEventListener {
   //This override handle the response from the service with the app open
   @Override
   public void onToneReceived(ToneModel toneModel) {
-    ToneImplementation.responseData(toneModel, reactContext);
+    RNToneImplementation.responseData(reactContext, toneModel);
   }
 }
