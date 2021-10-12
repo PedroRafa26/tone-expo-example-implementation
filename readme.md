@@ -64,16 +64,17 @@ dependencies {
 
 add permissions
 ``` xml
+  <!-- Allows internet connection -->
   <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-  <uses-permission android:name="android.permission.VIBRATE"/>
+  <!-- Allows execute foregroudn services -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <!-- Allows access to listen microphone -->
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
+  <!-- Allows access to device location -->
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
 ```
+
 #### NOTE: If you already have any of those ignore it and include the others
 
 Inside **application** tag add the service and the receiver
@@ -97,8 +98,7 @@ Inside **application** tag add the service and the receiver
     </receiver>
 </application>
 ```
-*Optional if you use [Linking](https://reactnative.dev/docs/linking)*
-and under **application** inside **manifest** tag add the **query** tag to [Linking](https://reactnative.dev/docs/linking) support  
+*Optional if you use [Linking](https://reactnative.dev/docs/linking)* and under **application** inside **manifest** tag add the **query** tag to [Linking](https://reactnative.dev/docs/linking) support  
 
 ``` xml
 <manifest>
@@ -130,19 +130,24 @@ import com.strutbebetter.tonelisten.models.ToneModel;
 import com.strutbebetter.tonelisten.rn.RNToneImplementation;
 ```
 
-implements ToneUIEventListener on MainActivity and declarate the next variables
+Implements ToneUIEventListener on MainActivity and import Singleton.
 
 ``` java
     public class MainActivity extends ReactActivity implements ToneUIEventListener {
+      //Import Tone Framework Singleton
       ToneFramework toneFramework;
-      private final int TONE_PERMISSION_CODE = 302;
-      private Activity mActivity;
-      private ReactContext reactContext;
-      ...
+      ... 
     }
 ```
+####Frameworks Methods
+ 
+***RNToneImplementatioon.handleIntent(Intent, ReactContext)*** 
+This method look for a response at the background it recieves two params the first one is an `Intent` and the second `ReactContext`
 
-Inside the Override onCreate method add the follow code to intantiate the framework
+***RNToneImplementatioon.responseData(ReactContext, ToneModel)***
+This method emit an event to the UI listener everytime a tone it's detected. It recieves two params the first one is `ReactContext` and the second a `ToneModel`
+
+Inside the Override _**onCreate**_ method add the follow code to obtain the ReactContext and intantiate the framework.
 
 ``` java
 @Override
@@ -152,10 +157,10 @@ Inside the Override onCreate method add the follow code to intantiate the framew
     //Here we are going to obtain the reactContext of the application
     getReactNativeHost().getReactInstanceManager().addReactInstanceEventListener(context -> {
       reactContext = context;
-      Intent intent = getIntent();
-      ToneImplementation.handleIntent(intent, context);
+      Intent intent = getIntent();      
+      RNToneImplementation.handleIntent(intent, context);
       mActivity = MainActivity.this;
-      //By the moment the apiKey: would be a debug one, later you'll need to provide your own key.
+      //Intantiation
       toneFramework = new ToneFramework("apiKeyDebug", MainActivity.this);
       toneFramework.checkPermission(ToneFramework.TONE_PERMISSION_CODE, mActivity);
     });
@@ -183,11 +188,11 @@ There's just  2 more Overrides to implement, one for handle checkPermissions and
   //This override handle the response from the service with the app open
   @Override
   public void onToneReceived(ToneModel toneModel) {
-   ToneImplementation.responseData(toneModel, reactContext);
+   RNToneImplementation.responseData(toneModel, reactContext);
   }
 ```
 
-
+MainActivity.java should look like [this](https://github.com/PedroRafa26/tone-expo-example-implementation/blob/master/android/app/src/main/java/com/toneexpoexampleimplementation/MainActivity.java)
  ## Receiving the Data 
  Once the native side is ready just need to create a listener to receive the data and handling it properly. Here is an example.
 
