@@ -1,6 +1,6 @@
 
 # Tone Framework Expo Integration for Android
-This guide will walk you throught the Tone Framework Integration for Android development
+This guide will walk you throught the Tone Framework Integration for Android with the Expo SDK
 
 ## Project Preparation
 
@@ -46,7 +46,7 @@ allprojects {
     ...
 }
 ```
-3) Now project-name/app/build.gradle add the follow code
+3) Now project-name/app/build.gradle add the following code
 
 ``` java
 dependencies {
@@ -66,7 +66,7 @@ add permissions
 ``` xml
   <!-- Allows internet connection -->
   <uses-permission android:name="android.permission.INTERNET"/>
-  <!-- Allows execute foregroudn services -->
+  <!-- Allows execute foreground services -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
   <!-- Allows access to listen microphone -->
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -141,13 +141,13 @@ Implements ToneUIEventListener on MainActivity and import Singleton.
 ```
 ####Frameworks Methods
  
-***RNToneImplementatioon.handleIntent(Intent, ReactContext)*** 
+***RNToneImplementation.handleIntent(Intent, ReactContext)*** 
 This method look for a response at the background it recieves two params the first one is an `Intent` and the second `ReactContext`
 
-***RNToneImplementatioon.responseData(ReactContext, ToneModel)***
+***RNToneImplementation.responseData(ReactContext, ToneModel)***
 This method emit an event to the UI listener everytime a tone it's detected. It recieves two params the first one is `ReactContext` and the second a `ToneModel`
 
-Inside the Override _**onCreate**_ method add the follow code to obtain the ReactContext and intantiate the framework.
+Inside the Override _**onCreate**_ method add the follow code to obtain the ReactContext and instantiate the framework.
 
 ``` java
 @Override
@@ -168,7 +168,7 @@ Inside the Override _**onCreate**_ method add the follow code to obtain the Reac
   }
 ```
 
-There's just  2 more Overrides to implement, one for handle checkPermissions and the other to create the Bridge and send the response to the frontPage
+There's just  2 more Overrides to implement, one to handle permission request and the other to create the Bridge and send the response to the UI
 ``` java
   //This override start the service after permissions request
   @Override
@@ -192,7 +192,7 @@ There's just  2 more Overrides to implement, one for handle checkPermissions and
   }
 ```
 
-MainActivity.java should look like [this](https://github.com/PedroRafa26/tone-expo-example-implementation/blob/master/android/app/src/main/java/com/toneexpoexampleimplementation/MainActivity.java)
+MainActivity.java should look similar to [this](https://github.com/PedroRafa26/tone-expo-example-implementation/blob/master/android/app/src/main/java/com/toneexpoexampleimplementation/MainActivity.java)
  ## Receiving the Data 
  Once the native side is ready just need to create a listener to receive the data and handling it properly. Here is an example.
 
